@@ -1,0 +1,34 @@
+﻿@{
+    ViewBag.Title = "Most Likely";
+}
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@ViewBag.Title</h1>
+                <h2 class="roomId">@ViewBag.RoomID</h2>
+                <h2 class="playerName">@ViewBag.Player</h2>
+            </hgroup>
+        </div>
+    </section>
+}
+@section scripts {
+    <script src="~/Scripts/jquery.signalR-1.1.3.min.js"></script>
+    <script src="~/signalR/hubs"></script>
+    <script>
+        var chat = $.connection.chat;
+
+        $(function () {
+            $.connection.hub.start().done(function () {
+                $("#newGame").click(function () {
+                    window.location = "/Home/Index";
+                });
+            });
+        });
+    </script>
+}
+
+<h1>@ViewBag.MostLikely</h1>
+<h2>@ViewBag.MostPoints points!</h2>
+
+<button id="newGame">Play again?</button>

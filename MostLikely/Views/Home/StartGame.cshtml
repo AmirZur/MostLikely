@@ -1,0 +1,117 @@
+﻿@model MostLikely.Models.EndGameModel
+
+@{
+    ViewBag.Title = "Most Likely";
+}
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@ViewBag.Title</h1>
+                <h2 class="roomId">@ViewBag.RoomID</h2>
+                <h2 class="playerName">@ViewBag.Player</h2>
+            </hgroup>
+        </div>
+    </section>
+}
+@section scripts {
+    <script src="~/Scripts/jquery.signalR-1.1.3.min.js"></script>
+    <script src="~/signalR/hubs"></script>
+    <script>
+        var chat = $.connection.chat;
+        var round = 1;
+        var score = 0;
+
+        chat.client.showResult = function (result) {
+            $("#result").text(result.NickName);
+            var source = "/Images/Icon_" + result.IconId + ".png";
+            document.getElementById("mostLikely").setAttribute("src", source);
+            $("#divResult").attr("style", "visiblility:visible; text-align:center; height:0px");
+            chat.server.getScore("@ViewBag.Player", "@ViewBag.RoomID");
+        }
+
+        chat.client.sendScore = function (newScore) {
+            if ((newScore - score) == 1) {
+                $("#scorechange").text("You got 1 point!");
+            }
+            else {
+                $("#scorechange").text("You got " + (newScore - score) + " points!");
+            }
+            score = newScore;
+            $("#score").text("Your Score: " + score);
+        }
+
+        chat.client.newQuestion = function (question) {
+            round += 1;
+            $("#questionNumber").text("Question " + round);
+            $("#question").text(question);
+            $("#score").text("");
+            $("#scorechange").text("")
+            $("#divResult").attr("style", "visibility:hidden; text-align:center; height:0px");
+            $("#result").text("");
+            $(".playerChoice").attr("style", "visibility:visible");
+        }
+
+        chat.client.endGame = function () {
+            $("#frmEndGame").submit();
+        }
+
+        chat.client.send = function (nickname) {
+            
+        }
+      
+
+        $(function () {
+            $.connection.hub.start().done(function () {
+                chat.server.rejoinRoom("@ViewBag.RoomID", "@ViewBag.Player");
+                $(".playerChoice").click(function () {
+                    $(".playerChoice").attr("style", "visibility:hidden");
+                    var choice = $(this).val();
+                    chat.server.sendChoice("@ViewBag.Player", choice, "@ViewBag.RoomID");
+                });
+            });
+        });
+    </script>
+}
+
+@using (Html.BeginForm("EndGame", "Home", FormMethod.Post, new { @id = "frmEndGame" }))
+{
+    @Html.HiddenFor(m => m.Nickname, new { @Value = ViewBag.Player })
+    @Html.HiddenFor(m => m.RoomId, new { @Value = ViewBag.RoomID })
+}
+
+<div>
+    <h2 id="questionNumber">Question @ViewBag.QuestionNumber</h2>
+    <h1 id="question">@ViewBag.Question</h1>
+</div>
+
+<div id="divResult" style="text-align:center; height:0px; visibility:hidden">
+    <h1 style="display:inline" id="preResult">Most Likely</h1>
+    <img style="display:inline" id="mostLikely" src="#" alt="" width="50" height="50" />
+    <h1 id="result" style="display:inline"></h1>
+    <h2 id="scorechange"></h2>
+    <h2 id="score"></h2>
+</div>
+
+
+<ul style="list-style-type:none" id="playerChoices">
+    @if (ViewBag.Players != null)
+    {
+        foreach (var player in ViewBag.Players)
+        {
+            var source = "/Images/Icon_" + player.IconId + ".png";
+            <li>
+                <div>
+                    <img class="playerChoice" src="@source" alt="@source" width="50" height="50" />
+                    <input type="button" style="visibility:visible" class="playerChoice" value="@player.NickName" />
+                </div>
+            </li>
+        }
+    }
+</ul>
+
+
+
+
+
+

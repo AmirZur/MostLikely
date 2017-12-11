@@ -1,0 +1,104 @@
+﻿@model MostLikely.Models.NewRoomModel
+
+@{
+    ViewBag.Title = "Most Likely";
+}
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@ViewBag.Title</h1>
+            </hgroup>
+        </div>
+    </section>
+}
+@section scripts {
+    <script src="~/Scripts/jquery.signalR-1.1.3.min.js"></script>
+    <script src="~/signalR/hubs"></script>
+    <script>
+        $(function () {
+            var chat = $.connection.chat;
+
+            chat.client.submitJoinRoomForm = function () {
+                $("#frmJoinRoom").submit();
+            }
+
+            chat.client.throwException = function () {
+                window.alert("No game found.")
+            }
+
+            chat.client.submitNewRoomForm = function (roomID) {
+                $("#newplayer").val($("#firstplayer").val());
+                $("#roomID").val(roomID);
+                $("#frmJoinRoom").submit();
+            }
+            
+            $.connection.hub.start().done(function () {
+                $("#btnJoinRoom").click(function () {
+                    chat.server.joinRoom($("#newplayer").val(), $("#roomID").val());
+                });
+
+                $("#btnNewRoom").click(function () {
+                    chat.server.newRoom($("#firstplayer").val());
+                });
+
+                /* When the user clicks on the button, 
+                toggle between hiding and showing the dropdown content */
+                $("#btnDropdown").click(function () {
+                    document.getElementById("myDropdown").classList.toggle("show");
+                });
+
+                // Close the dropdown menu if the user clicks outside of it
+                window.onclick = function (event) {
+                    if (!event.target.matches('.dropbtn')) {
+
+                        var dropdowns = document.getElementsByClassName("dropdown-content");
+                        var i;
+                        for (i = 0; i < dropdowns.length; i++) {
+                            var openDropdown = dropdowns[i];
+                            if (openDropdown.classList.contains('show')) {
+                                openDropdown.classList.remove('show');
+                            }
+                        }
+                    }
+                } 
+            });
+
+            MyFunction = function (key) {
+                if (key.keyCode == 32) {
+                    alert("Space?");
+                }
+            }
+        });
+    </script>
+} 
+
+@using (Html.BeginForm("NewRoom", "Home", FormMethod.Post, new { id = "frmNewRoom" }))
+{
+    <fieldset>
+        Nickname:<br>
+        @Html.TextBoxFor(m => m.Nickname, new { id = "firstplayer", onkeypress = "MyFunction( );" })
+    </fieldset>
+
+}
+@*<div class="dropdown">
+    <button id="btnDropdown" class="dropbtn"></button>
+    <div id="myDropdown" class="dropdown-content">
+        <img src="~/Images/Icon_1.png">
+    </div>
+</div>*@ 
+<button id="btnNewRoom">Create Room</button>
+
+
+@using (Html.BeginForm("JoinRoom", "Home", FormMethod.Post, new { id = "frmJoinRoom" }))
+{
+    <fieldset>
+        Nickname:<br>
+        @Html.TextBoxFor(m => m.Nickname, new { id = "newplayer" })
+        <br>
+        Game ID:<br>
+        @Html.TextBoxFor(m => m.ID, new { id = "roomID" })
+    </fieldset>
+    
+    }
+<button id="btnJoinRoom">Join Room</button>
